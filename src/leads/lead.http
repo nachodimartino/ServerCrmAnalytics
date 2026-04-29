@@ -1,0 +1,13 @@
+### Crear un nuevo Lead
+POST http://localhost:3000/api/leads/crea
+Content-Type: application/json
+
+{
+    "lead_id_external": "ML_Nachoo12",
+    "customer_name": "Di Martino Ignacio Jesús",
+    "email":"nachojdimartino@gmail.com"
+  
+}
+
+### getOne() Empleados
+GET http://localhost:3000/api/leads/busca/1

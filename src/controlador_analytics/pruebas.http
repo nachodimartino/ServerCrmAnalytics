@@ -1,0 +1,50 @@
+
+
+POST http://localhost:3000/api/analytics/creaMensaje
+Content-Type: application/json
+
+{
+  "leadIdExternal": "demo_hot_01",
+  "customer_name": "Martín Ferreyra",
+  "email": "martin.ferreyra@gmail.com",
+  "phone": "+5491155443322",
+  "channel": "whatsapp",
+  "n_channels": 2,
+  "conversation_days": 1,
+  "avg_response_time": 5,
+  "ticket_estimate": "low",
+  "fecha_lote": "2026/04/28",
+  "messages": [
+    {"message": "Hola! Vi el depa de 3 ambientes en Caballito, me pasas el precio?", "createdAt": "2026-04-28 09:00:00"},
+    {"message": "Perfecto, cuánto son las expensas?", "createdAt": "2026-04-28 09:10:00"},
+    {"message": "Tiene cochera? Y acepta mascotas?", "createdAt": "2026-04-28 09:20:00"},
+    {"message": "Me encanta la zona, puedo ir a verlo hoy a las 18?", "createdAt": "2026-04-28 09:35:00"},
+    {"message": "Confirmame si está libre, tengo el efectivo disponible ya", "createdAt": "2026-04-28 09:50:00"},
+    {"message": "Quiero señar ese depto, cómo hago?", "createdAt": "2026-04-28 10:00:00"},
+    {"message": "che al final, no me alcanza con lo que cobro este mes, disculpame por las molestias!", "createdAt": "2026-04-29 10:00:00"}
+  ]
+}
+
+### lead inversor
+POST http://localhost:3000/api/analytics/creaMensaje
+Content-Type: application/json
+
+{
+  "leadIdExternal": "demo_investor_01",
+  "customer_name": "Alejandra Vidal",
+  "email": "ale.vidal@empresa.com",
+  "phone": "+5491177665544",
+  "channel": "email",
+  "n_channels": 2,
+  "conversation_days": 3,
+  "avg_response_time": 20,
+  "ticket_estimate": "high",
+  "fecha_lote": "2026/04/28",
+  "messages": [
+    {"message": "Buenos días, busco un local comercial en zona céntrica para poner en alquiler", "createdAt": "2026-04-26 09:00:00"},
+    {"message": "Me interesa también algún PH para alquiler temporario, qué rendimiento dan?", "createdAt": "2026-04-26 14:00:00"},
+    {"message": "Tengo unos dólares disponibles para invertir en ladrillo, qué recomiendan?", "createdAt": "2026-04-27 10:00:00"},
+    {"message": "Cuánto rinde un local en el microcentro actualmente?", "createdAt": "2026-04-28 09:00:00"},
+    {"message": "Me pueden mandar opciones de locales entre 80k y 120k USD?", "createdAt": "2026-04-28 11:00:00"}
+  ]
+}

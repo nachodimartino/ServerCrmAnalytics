@@ -1,0 +1,17 @@
+{
+	"folders": [
+		{
+			"path": "../../.."
+		},
+		{
+			"path": "../../../../Modelo_intención-mensaje"
+		},
+		{
+			"path": "../../../../Modelo lead scoring (modelo B)"
+		},
+		{
+			"path": "../../../../Cluster_CRM"
+		}
+	],
+	"settings": {}
+}
