@@ -16,6 +16,13 @@ export class mensajesLeadRepository {
     
         return newmessage;
       }
+  async create_mensajes(data:any[]){
+    const em = orm.em; 
+      const mensajes = await em.insertMany(mensajesLead, data);
+    await em.flush();
+
+    return mensajes;
+  }
 
 async update (id:number,data:any){
 const em=orm.em
@@ -41,6 +48,17 @@ async get_mensajes_ultimos_dias_byLead(idLead:number){
 
   const messagesLead= await em.find(mensajesLead,{lead:idLead,createdAt: { $gte: fechaCorte }}) // me trae los mensajes de los ultimos 30 dias
   // de ese lead
+
+  return messagesLead
+
+  }
+  // traer mensajes de la ultima semana del lead para campañas
+  async get_mensajes_ultima_semana(idLead:number){
+  const em=orm.em
+  const fechaCorte = new Date();
+  fechaCorte.setDate(fechaCorte.getDate() - 7);
+
+  const messagesLead= await em.find(mensajesLead,{lead:idLead,createdAt: { $gte: fechaCorte }})
 
   return messagesLead
 

@@ -2,7 +2,7 @@ import { Lead } from "../../leads/lead.entity.js";
 
 export class leadScoringService {
 
-  private baseUrl = 'http://localhost:8001'; // puerto de FastAPI
+private baseUrl = process.env.SCORING_SERVICE_URL || 'http://localhost:8001';
 
  async predictleadScoring(lead: Lead) {
 

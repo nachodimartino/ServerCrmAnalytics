@@ -2,7 +2,7 @@
 
 export class IntentService {
 
-  private baseUrl = 'http://localhost:8000'; // puerto de FastAPI
+private baseUrl = process.env.NLP_SERVICE_URL || 'http://localhost:8000';
 
   async predictIntent(message: string) {
 

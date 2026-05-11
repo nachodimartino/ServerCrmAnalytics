@@ -1,6 +1,6 @@
 export class ClusterService {
 
-  private baseUrl = 'http://localhost:5000'; // puerto de FastAPI
+private baseUrl = process.env.CLUSTERING_SERVICE_URL || 'http://localhost:8005';
 
   async predictCluster(lead_payload: any) {
 

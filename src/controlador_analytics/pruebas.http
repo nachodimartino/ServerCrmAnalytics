@@ -1,36 +1,34 @@
 
-
+###
 POST http://localhost:3000/api/analytics/creaMensaje
 Content-Type: application/json
 
 {
-  "leadIdExternal": "demo_hot_01",
+  "leadIdExternal": "test_02_comprador",
   "customer_name": "Martín Ferreyra",
   "email": "martin.ferreyra@gmail.com",
-  "phone": "+5491155443322",
+  "phone": "+5491144332211",
   "channel": "whatsapp",
-  "n_channels": 2,
+  "n_channels": 1,
   "conversation_days": 1,
-  "avg_response_time": 5,
+  "avg_response_time": 8,
   "ticket_estimate": "low",
   "fecha_lote": "2026/04/28",
   "messages": [
-    {"message": "Hola! Vi el depa de 3 ambientes en Caballito, me pasas el precio?", "createdAt": "2026-04-28 09:00:00"},
-    {"message": "Perfecto, cuánto son las expensas?", "createdAt": "2026-04-28 09:10:00"},
-    {"message": "Tiene cochera? Y acepta mascotas?", "createdAt": "2026-04-28 09:20:00"},
-    {"message": "Me encanta la zona, puedo ir a verlo hoy a las 18?", "createdAt": "2026-04-28 09:35:00"},
-    {"message": "Confirmame si está libre, tengo el efectivo disponible ya", "createdAt": "2026-04-28 09:50:00"},
-    {"message": "Quiero señar ese depto, cómo hago?", "createdAt": "2026-04-28 10:00:00"},
-    {"message": "che al final, no me alcanza con lo que cobro este mes, disculpame por las molestias!", "createdAt": "2026-04-29 10:00:00"}
+    {"message": "Hola, vi el depto de Palermo, quiero ir a verlo para vivir ahí", "createdAt": "2026-04-28 09:00:00"},
+    {"message": "Escuchan ofertas? Tengo efectivo disponible", "createdAt": "2026-04-28 09:20:00"},
+    {"message": "Si me cierra el precio quiero avanzar con la seña esta semana", "createdAt": "2026-04-28 09:40:00"},
+    {"message": "Me gustaría mudarnos antes de fin de mes con mi familia", "createdAt": "2026-04-28 10:00:00"},
+    {"message": "Avisame para coordinar la visita, mañana estoy disponible todo el día", "createdAt": "2026-04-28 10:30:00"}
   ]
 }
-
 ### lead inversor
+
 POST http://localhost:3000/api/analytics/creaMensaje
 Content-Type: application/json
 
 {
-  "leadIdExternal": "demo_investor_01",
+  "leadIdExternal": "test_01_inversor",
   "customer_name": "Alejandra Vidal",
   "email": "ale.vidal@empresa.com",
   "phone": "+5491177665544",
@@ -44,7 +42,143 @@ Content-Type: application/json
     {"message": "Buenos días, busco un local comercial en zona céntrica para poner en alquiler", "createdAt": "2026-04-26 09:00:00"},
     {"message": "Me interesa también algún PH para alquiler temporario, qué rendimiento dan?", "createdAt": "2026-04-26 14:00:00"},
     {"message": "Tengo unos dólares disponibles para invertir en ladrillo, qué recomiendan?", "createdAt": "2026-04-27 10:00:00"},
-    {"message": "Cuánto rinde un local en el microcentro actualmente?", "createdAt": "2026-04-28 09:00:00"},
+    {"message": "Cuánto rinde un local en el microcentro actualmente?", "createdAt": "2026-04-27 15:00:00"},
     {"message": "Me pueden mandar opciones de locales entre 80k y 120k USD?", "createdAt": "2026-04-28 11:00:00"}
   ]
 }
+
+### inquilino buscando cerrar
+
+POST http://localhost:3000/api/analytics/creaMensaje
+Content-Type: application/json
+
+{
+  "leadIdExternal": "test_03_inquilino",
+  "customer_name": "Camila Torres",
+  "email": "cami.torres@gmail.com",
+  "phone": "+5491133221100",
+  "channel": "whatsapp",
+  "n_channels": 2,
+  "conversation_days": 2,
+  "avg_response_time": 12,
+  "ticket_estimate": "medium",
+  "fecha_lote": "2026/04/28",
+  "messages": [
+    {"message": "Hola, busco alquiler de 2 ambientes en Villa Urquiza", "createdAt": "2026-04-27 09:00:00"},
+    {"message": "Cuáles son los requisitos de garantía para alquilar?", "createdAt": "2026-04-27 10:00:00"},
+    {"message": "Tengo garantía propietaria, puedo avanzar con el contrato de alquiler?", "createdAt": "2026-04-27 14:00:00"},
+    {"message": "Cuándo puedo verlo? Si me gusta lo alquilo esta semana", "createdAt": "2026-04-28 10:00:00"}
+  ]
+}
+###
+POST http://localhost:3000/api/analytics/creaMensaje
+Content-Type: application/json
+
+{
+  "leadIdExternal": "test_log_001",
+  "customer_name": "Test Log",
+  "email": "testlog@gmail.com",
+  "phone": "+5491100000099",
+  "channel": "whatsapp",
+  "n_channels": 1,
+  "conversation_days": 1,
+  "avg_response_time": 10,
+  "ticket_estimate": "medium",
+  "fecha_lote": "2026/05/04",
+  "messages": [
+    {"message": "Hola me interesa comprar un departamento", "createdAt": "2026-05-04 10:00:00"}
+  ]
+}
+### Caso 4 — Soporte, excluido de campañas
+POST http://localhost:3000/api/analytics/creaMensaje
+Content-Type: application/json
+
+{
+  "leadIdExternal": "test_04_soporte",
+  "customer_name": "Roberto Sánchez",
+  "email": "roberto.s@gmail.com",
+  "phone": "+5491199887766",
+  "channel": "email",
+  "n_channels": 1,
+  "conversation_days": 1,
+  "avg_response_time": 15,
+  "ticket_estimate": "low",
+  "fecha_lote": "2026/04/28",
+  "messages": [
+    {"message": "Tengo un problema con las expensas del mes pasado, están mal liquidadas", "createdAt": "2026-04-28 09:00:00"},
+    {"message": "El propietario no responde hace dos semanas", "createdAt": "2026-04-28 10:00:00"},
+    {"message": "Necesito hablar con alguien de administración por el vencimiento del contrato", "createdAt": "2026-04-28 11:00:00"}
+  ]
+}
+
+### Caso 5 — Desistimiento explicito
+POST http://localhost:3000/api/analytics/creaMensaje
+Content-Type: application/json
+
+{
+  "leadIdExternal": "test_05_desistimiento",
+  "customer_name": "Lucas Pereyra",
+  "email": "lucas.p@gmail.com",
+  "phone": "+5491166554433",
+  "channel": "facebook",
+  "n_channels": 1,
+  "conversation_days": 1,
+  "avg_response_time": 120,
+  "ticket_estimate": "high",
+  "fecha_lote": "2026/04/28",
+  "messages": [
+    {"message": "Hola quería info sobre el depto", "createdAt": "2026-04-28 09:00:00"},
+    {"message": "Ah no, me parece muy caro para la zona honestamente", "createdAt": "2026-04-28 10:00:00"},
+    {"message": "No me interesa, no tengo presupuesto para eso", "createdAt": "2026-04-28 11:00:00"}
+  ]
+}
+
+
+### Caso 6 — Entropía alta, disperso (edge case del modelo)
+
+POST http://localhost:3000/api/analytics/creaMensaje
+Content-Type: application/json
+
+{
+  "leadIdExternal": "test_06_disperso",
+  "customer_name": "Florencia Méndez",
+  "email": "flor.mendez@outlook.com",
+  "phone": "+5491188776655",
+  "channel": "web",
+  "n_channels": 3,
+  "conversation_days": 7,
+  "avg_response_time": 30,
+  "ticket_estimate": "medium",
+  "fecha_lote": "2026/04/28",
+  "messages": [
+    
+    {"message": "En realidad estoy pensando en alquilar por ahora", "createdAt": "2026-04-25 09:00:00"}
+  
+  ]
+}
+
+### Test creaMensaje
+POST https://magazine-clad-argue.ngrok-free.dev/api/analytics/creaMensaje
+Content-Type: application/json
+ngrok-skip-browser-warning: true
+
+{
+  "leadIdExternal": "test_scoring_02",
+  "customer_name": "Valentina Ríos",
+  "email": "vale.rios@hotmail.com",
+  "phone": "+5491155443322",
+  "channel": "instagram",
+  "n_channels": 1,
+  "conversation_days": 4,
+  "avg_response_time": 45,
+  "ticket_estimate": "medium",
+  "fecha_lote": "2026/04/28",
+  "messages": [
+    {"message": "Hola vi la publicación, qué precio tiene ese departamento?", "createdAt": "2026-04-25 10:00:00"}
+ 
+  ]
+}
+
+### Test clusterProfile
+GET https://magazine-clad-argue.ngrok-free.dev/api/cluster/clusterProfile
+ngrok-skip-browser-warning: true

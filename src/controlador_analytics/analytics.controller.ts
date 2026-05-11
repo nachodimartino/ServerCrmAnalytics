@@ -41,7 +41,49 @@ export function sanitizeanalitycsInput(req: Request, res: Response, next: NextFu
 }
 
 export async function create(req:Request, res:Response) {
-    try{
+
+  try{
+      const input = req.body.sanitizedInput;
+const errors = [];
+
+// 1. Validar Email
+const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+if (!input.email || !emailRegex.test(input.email)) {
+    errors.push("El formato del email es inválido.");
+}
+
+// 2. Validar Teléfono (que sea numérico)
+if (input.phone && isNaN(Number(input.phone))) {
+    errors.push("El número de teléfono debe ser un valor numérico.");
+}
+
+// 3. Validar Canales (Enum)
+const canalesValidos = ['whatsapp', 'web', 'instagram', 'twitter', 'email','facebook'];
+if (!canalesValidos.includes(input.channel)) {
+    errors.push(`Canal inválido. Valores permitidos: ${canalesValidos.join(', ')}`);
+}
+
+// 4. Validar Ticket Estimate (Enum)
+const ticketValidos = ['high', 'low', 'medium'];
+if (!ticketValidos.includes(input.ticket_estimate)) {
+    errors.push(`Ticket estimate inválido. Valores permitidos: ${ticketValidos.join(', ')}`);
+}
+
+// 5. Validar Tipos Numéricos
+if (typeof input.avg_response_time !== 'number') errors.push("avg_response_time debe ser un número.");
+if (typeof input.conversation_days !== 'number') errors.push("conversation_days debe ser un número.");
+if (typeof input.n_channels !== 'number') errors.push("n_channels debe ser un número.");
+
+// --- RETORNO DE ERRORES ---
+if (errors.length > 0) {
+    return res.status(400).json({ 
+        message: 'Error de validación en los datos recibidos', 
+        errors: errors 
+    });
+}
+
+
+// FIN DE VALIDACIÓN 
         const leadIdExternal=req.body.leadIdExternal
         let lead=await leadrepository.getOne(leadIdExternal)
         if(!lead){
@@ -71,24 +113,32 @@ export async function create(req:Request, res:Response) {
          const mensajesArray = Array.isArray(messages) ? messages : [messages];
           const mensajesCreados = [];
           
-          for ( const m of mensajesArray){
-            if(esMensajePrescindible(m.message)){
+          for ( const m of mensajesArray){ // el array sigue
+            if(esMensajePrescindible(m.message)){// esto sgiue
               continue;
             }
-            const message={
-            lead:lead,
-            message:m.message,
-            createdAt:m.createdAt,
-            fecha_lote:req.body.sanitizedInput.fecha_lote
-        }
-        const mensaje= await mensajesLeadrepository.create(message)
-         mensajesCreados.push(mensaje);
+           
+       // const mensaje= await mensajesLeadrepository.create(message)// esto aca no va mas
          const intention = await intentService.predictIntent(m.message)
+         const mensaje ={
+           lead:lead,
+           message:m.message,
+           createdAt:m.createdAt,
+          fecha_lote:req.body.sanitizedInput.fecha_lote,
+          p_compra:intention.p_compra,
+          probabilities:intention.probabilities
+         }
+         mensajesCreados.push(mensaje);
         console.log('Intencion:',intention)
-        await mensajesLeadrepository.update(mensaje.id,intention)
+        // deberia crear un objeto mensaje que agregue lo que devuelve la intencion para crear el mensaje
+        // luego con ese objeto mensaje que es el mismo que el de arriba solamente que esta completo con la intencion ahora
+        // lo guardo en un array de mensajes
+        // una vez que tenga todos los mensajes de ese lead en ese arreglo, paso el array completo al repositorio que maneja los datos
           }
+       await mensajesLeadrepository.create_mensajes(mensajesCreados)
         const cantidad_mensajes=mensajesCreados.length
         console.log('cantidad mensajes',cantidad_mensajes)
+        // entra en juego el primer modelo de clasificacion de intencion
         const avg_p_compra= await calculaAvgIntention(lead.id) 
         const max_p_compra= await calculamaxIntention(lead.id)
         const trend_p_compra= await calcula_trend_intention(lead.id)
@@ -110,8 +160,11 @@ export async function create(req:Request, res:Response) {
        const leadScoring = await leadscoringService.predictleadScoring(leadForScoring)
         lead=await leadrepository.update(lead.id,{...data,...leadScoring,n_mensajes:cantidad_mensajes})
         console.log('lead scoring',leadScoring,lead)
-       const respuesta=await armar_respuesta(lead)
-        return res.status(201).json({ message: 'Lead creado con éxito', data:respuesta });
+
+       
+const respuesta = await armar_respuesta(lead)
+console.log('RESPUESTA:', JSON.stringify(respuesta))
+return res.status(201).json({ message: 'Lead creado con éxito', data: respuesta })
     }catch(error:any){
  return res.status(500).json({ message: 'Error en la capa de datos', error: error.message });
     }
@@ -277,75 +330,133 @@ function esMensajePrescindible(texto:string) {
     return false;
 }
 
-async function armar_respuesta(lead:Lead){
-try{
-  let status_lead
-  const ultimo_mensaje_lead=await mensajesLeadrepository.getUltimoMensajeByLead(lead.id)
-  if(!ultimo_mensaje_lead){
-    throw new ValidationError('El ultimo mensaje no se encontro')
-  }
-if(lead.percentile>85 && ultimo_mensaje_lead.probabilities.desistimiento<0.65){
-    status_lead='caliente'
-}
-else if(lead.percentile>60 && lead.percentile<=85){
-status_lead='tibio'
-}
-else status_lead='frio'
+async function armar_respuesta(lead: Lead) {
+  try {
+    const ultimo_mensaje = await mensajesLeadrepository.getUltimoMensajeByLead(lead.id);
+    if (!ultimo_mensaje) {
+      throw new ValidationError('El ultimo mensaje no se encontro');
+    }
 
-if(ultimo_mensaje_lead.probabilities.desistimiento >= 0.65){
-  status_lead='frio'
-  const frio_desistimiento=true
-}
-let trend
-if(lead.percentile>85 && lead.trend_p_compra>0.4 &&ultimo_mensaje_lead.probabilities.desistimiento<0.65){
-trend='Lead con interes en alza'
-}
-else if(lead.percentile>85 && lead.trend_p_compra>0.4 &&ultimo_mensaje_lead.probabilities.desistimiento>=0.65){
-  trend='lead perdiendo interes'
-}
-else trend='lead estable'
-let entropia
-if (status_lead === 'caliente' && lead.intent_entropy < 0.2) {
-      entropia = "Prioridad máxima: Cliente decidido. Coordinar visita o cierre.";
-    } else if (lead.intent_entropy > 0.5) {
-      entropia = "Cliente confuso: Ofrecer asesoramiento general para definir búsqueda.";
-    } else if (status_lead.includes('FRÍO')) {
-      entropia = "No requiere acción inmediata. Mantener en base de datos.";
+    const hay_desistimiento = ultimo_mensaje.probabilities.desistimiento >= 0.65;
+
+    // evaluacion por percentil
+    let status_lead: 'caliente' | 'tibio' | 'frio';
+    if (hay_desistimiento) {
+      status_lead = 'frio';
+    } else if (lead.percentile > 85) {
+      status_lead = 'caliente';
+    } else if (lead.percentile > 60) {
+      status_lead = 'tibio';
     } else {
-      entropia = "Realizar seguimiento preventivo del lead";
+      status_lead = 'frio';
     }
 
-    let recomendacion: string;
+    // evalucion por tendencia
+    let trend: string;
 
-    if (ultimo_mensaje_lead.probabilities.desistimiento >= 0.65 ) {
-      recomendacion = "⛔ No contactar: El cliente desistió o expresó falta de fondos.";
-    }  
-    else if (status_lead === 'caliente' && lead.intent_entropy < 0.25) {
-      recomendacion = "🚀 CIERRE INMINENTE: Cliente decidido y con objetivo claro. Llamar ya.";
-    } 
-    else if (status_lead === 'caliente' && lead.intent_entropy >= 0.25) {
-      recomendacion = "🔥 ALTO INTERÉS: Está muy interesado pero tiene dudas. Ayudar a decidir.";
-    } 
-    else if (lead.intent_entropy > 0.5) {
-      recomendacion = "🌀 LEAD DISPERSO: No tiene claro qué busca. Enviar catálogo general.";
-    } 
-    else if (status_lead === 'tibio' && lead.trend_p_compra > 0) {
-      recomendacion = "📞 SEGUIMIENTO: Interés moderado en ascenso. Contactar en 24hs.";
-    } 
-    else {
-      recomendacion = "😴 MANTENIMIENTO: Sin apuro. Dejar en flujo de nutrición automática.";
+    if (hay_desistimiento) {
+      // desistimiento pisa cualquier otra señal
+      trend = 'Lead abandonando: expresó falta de interés o fondos en el último mensaje';
+
+    } else if (status_lead === 'caliente' && lead.trend_p_compra > 0.4) {
+      trend = 'Lead caliente en alza: intención de compra creciendo, prioridad máxima';
+
+    } else if (status_lead === 'caliente' && lead.trend_p_compra >= 0 && lead.trend_p_compra <= 0.4) {
+      trend = 'Lead caliente estabilizado: alto interés pero sin aceleración reciente, mantener un seguimiento';
+
+    } else if (status_lead === 'caliente' && lead.trend_p_compra < 0) {
+      trend = 'Lead caliente enfriándose: tuvo alto interés pero está bajando, actuar antes de que se pierda';
+
+    } else if (status_lead === 'tibio' && lead.trend_p_compra > 0.4) {
+      trend = 'Lead tibio en aceleración: crecimiento rápido, puede pasar a caliente en las proximas interacciones';
+
+    } else if (status_lead === 'tibio' && lead.trend_p_compra >= 0 && lead.trend_p_compra <= 0.4) {
+      trend = 'Lead tibio estable: interés moderado sin cambios relevantes, seguimiento estándar';
+
+    } else if (status_lead === 'tibio' && lead.trend_p_compra < 0) {
+      trend = 'Lead tibio enfriándose: el interés está bajando';
+
+    } else if (status_lead === 'frio' && lead.trend_p_compra > 0.3) {
+      trend = 'Lead frío con señales de rescate: bajo percentil pero tendencia positiva, llevar un monitoreo en las proximas interacciones';
+
+    } else if (status_lead === 'frio' && lead.trend_p_compra >= 0 && lead.trend_p_compra <= 0.3) {
+      trend = 'Lead frío sin actividad relevante: mantener en base, sin acción inmediata';
+
+    } else {
+     
+      trend = 'Lead frío y en descenso: probabilidad de conversión muy baja, no invertir recursos';
     }
-   const respuesta={
-      status_lead:status_lead,
-      score:lead.percentile,
-      tendencia:trend,
-      incertidumbre_lead:entropia,
-      recomendacion:recomendacion
+
+    // --- ENTROPÍA: 
+    let incertidumbre_lead: string;
+
+    if (hay_desistimiento) {
+      incertidumbre_lead = 'No aplica: el lead expresó desistimiento explícito';
+
+    } else if (status_lead === 'caliente' && lead.intent_entropy < 0.2) {
+      incertidumbre_lead = 'Objetivo muy claro: sabe lo que busca y cómo avanzar. Mínima fricción esperada en el cierre';
+
+    } else if (status_lead === 'caliente' && lead.intent_entropy >= 0.2 && lead.intent_entropy <= 0.5) {
+      incertidumbre_lead = 'Objetivo claro con algunas dudas: tiene intención de compra pero puede necesitar ayuda para decidir';
+
+    } else if (status_lead === 'tibio' && lead.intent_entropy < 0.3) {
+      incertidumbre_lead = 'Interés moderado con foco definido: sabe qué quiere pero aún no está decidido a avanzar';
+
+    } else if (lead.intent_entropy > 0.5) {
+      incertidumbre_lead = 'Búsqueda dispersa: no tiene claro qué tipo de propiedad o zona busca, ofrecer asesoramiento general';
+
+    } else if (status_lead === 'frio') {
+      incertidumbre_lead = 'Lead frío: sin señales de intención definida, no requiere acción inmediata';
+
+    } else {
+      incertidumbre_lead = 'Seguimiento preventivo: perfil mixto, evaluar en el próximo lote';
     }
-    return respuesta
-}
-catch(error:any){
-console.error("Error al procesar reporte:", error.message);
-    return "Error al generar reporte de inteligencia.";
-}
-}
+
+    // RECOMENDACIÓN: cruza status + trend + entropía ---
+    let recomendacion_final: string;
+
+    if (hay_desistimiento) {
+      recomendacion_final = 'NO CONTACTAR: El lead expresó desistimiento o falta de fondos. Archivar o pasar a lista de reactivación a 90 días';
+
+    } else if (status_lead === 'caliente' && lead.intent_entropy < 0.25 && lead.trend_p_compra > 0) {
+      recomendacion_final = 'CIERRE INMEDIATO: Lead decidido, objetivo claro y en alza. Llamar hoy, no mañana';
+
+    } else if (status_lead === 'caliente' && lead.intent_entropy < 0.25 && lead.trend_p_compra <= 0) {
+      recomendacion_final = 'RESCATAR CALIENTE: Lead decidido pero perdiendo un poco el interes. Contactar urgente con propuesta concreta antes de que enfríe';
+
+    } else if (status_lead === 'caliente' && lead.intent_entropy >= 0.25) {
+      recomendacion_final = 'ALTO INTERÉS CON DUDAS: Está muy interesado pero disperso. Contactar para acotar opciones y guiarlo al cierre';
+
+    } else if (status_lead === 'tibio' && lead.trend_p_compra > 0.4) {
+      recomendacion_final = 'OPORTUNIDAD EN DESARROLLO: Tibio acelerando fuerte. Priorizar sobre otros tibios, puede cerrar en 48-72hs';
+
+    } else if (status_lead === 'tibio' && lead.trend_p_compra >= 0) {
+      recomendacion_final = 'SEGUIMIENTO ESTÁNDAR: Interés moderado estable. Contactar en 24hs con propiedades similares a las consultadas';
+
+    } else if (status_lead === 'tibio' && lead.trend_p_compra < 0) {
+      recomendacion_final = 'PREVENIR PÉRDIDA: Tibio enfriándose. Un contacto oportuno puede revertir la tendencia antes del próximo lote';
+
+    } else if (status_lead === 'frio' && lead.trend_p_compra > 0.3) {
+      recomendacion_final = 'MONITOREAR: Frío pero con tendencia positiva. No invertir recursos aún, revisar en el próximo lote';
+
+    } else {
+      recomendacion_final = 'NO REQUIERE DE ATENCIÓN INMEDIATA: Sin señales de conversión próxima. Dejar en flujo del sistema';
+    }
+const reporte_unificado = [
+  `ESTADO: ${status_lead.toUpperCase()} (Score: ${lead.percentile.toFixed(2)})`,
+  `TENDENCIA: ${trend}`,
+  `CERTEZA: ${incertidumbre_lead}`,
+  `ACCIÓN: ${recomendacion_final}`
+].join(' | ');
+
+return {
+  recomendacion: reporte_unificado
+};
+
+  } catch (error: any) {
+    console.error('Error al procesar reporte:', error.message);
+    
+    return { 
+      recomendacion: 'Error interno: No se pudo generar el reporte de inteligencia.' 
+    };
+  }}
